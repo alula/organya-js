@@ -1,6 +1,6 @@
 # organya-js
 
-An accurate <300 LoC player for Organya music files.
+An accurate 250 SLoC player for Organya music files.
 
 Organya is a chiptune music format created by [Daisuke "Pixel" Amaya](https://twitter.com/oxizn), meant for use in his [Cave Story](https://cavestory.org) game.
 

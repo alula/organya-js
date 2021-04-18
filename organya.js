@@ -121,7 +121,6 @@
                     if (this.state[i].playing) {
                         const samples = (i < 8) ? 256 : drums[i - 8].samples;
 
-                        //let s = Math.sin(this.state[i].t++ / this.sampleRate * this.state[i].frequency * 2 * Math.PI / 8) / 4;
                         const phase = (this.state[i].frequency / this.sampleRate) * advTable[this.state[i].octave];
                         this.state[i].t += phase;
 
@@ -170,9 +169,7 @@
                     }
                 }
 
-                this.samplesThisTick++;
-
-                if (this.samplesThisTick == this.samplesPerTick) {
+                if (++this.samplesThisTick == this.samplesPerTick) {
                     this.playPos += 1;
                     this.samplesThisTick = 0;
 
@@ -188,48 +185,28 @@
                 const note = this.song.tracks[track].find((n) => n.pos == this.playPos);
                 if (note) {
                     if (note.key != 255) {
+                        const octave = ((note.key / 12) | 0);
+                        const key = note.key % 12;
+
                         if (this.state[track].key == 255) {
                             this.state[track].key = note.key;
 
-                            const octave = ((note.key / 12) | 0);
-                            const key = note.key % 12;
-
-                            this.state[track].octave = octave;
                             this.state[track].frequency = freqTable[key] * octTable[octave] + (this.song.instruments[track].freq - 1000);
                             if (this.song.instruments[track].pipi != 0 && !this.state[track].playing) {
                                 this.state[track].num_loops = ((octave + 1) * 4);
                             }
-
-                            this.state[track].playing = true;
-                            this.state[track].looping = true;
-                        } else if (this.state[track].key == note.key) {
-                            // todo
-                            const octave = ((note.key / 12) | 0);
-
-                            this.state[track].octave = octave;
-                            if (this.song.instruments[track].pipi != 0 && !this.state[track].playing) {
-                                this.state[track].num_loops = ((octave + 1) * 4);
-                            }
-
-                            this.state[track].playing = true;
-                            this.state[track].looping = true;
-                        } else {
+                        } else if (this.state[track].key != note.key) {
                             this.state[track].key = note.key;
-
-                            const octave = ((note.key / 12) | 0);
-                            const key = note.key % 12;
-
-                            this.state[track].octave = octave;
-                            if (this.song.instruments[track].pipi != 0 && !this.state[track].playing) {
-                                this.state[track].num_loops = ((octave + 1) * 4);
-                            }
-
                             this.state[track].frequency = freqTable[key] * octTable[octave] + (this.song.instruments[track].freq - 1000);
-
-                            this.state[track].playing = true;
-                            this.state[track].looping = true;
                         }
 
+                        if (this.song.instruments[track].pipi != 0 && !this.state[track].playing) {
+                            this.state[track].num_loops = ((octave + 1) * 4);
+                        }
+
+                        this.state[track].octave = octave;
+                        this.state[track].playing = true;
+                        this.state[track].looping = true;
                         this.state[track].length = note.len;
                     }
 
@@ -275,19 +252,13 @@
         play() {
             this.playing = true;
 
-            console.log(this.song);
-
             this.ctx = new AudioContext();
             this.sampleRate = this.ctx.sampleRate;
             this.samplesPerTick = (this.sampleRate / 1000) * this.song.wait | 0;
             this.samplesThisTick = 0;
 
             this.node = this.ctx.createScriptProcessor(4096, 2, 2);
-            this.node.onaudioprocess = (event) => {
-                const { outputBuffer } = event;
-                this.synth(outputBuffer.getChannelData(0), outputBuffer.getChannelData(1));
-            };
-
+            this.node.onaudioprocess = (e) => this.synth(e.outputBuffer.getChannelData(0), e.outputBuffer.getChannelData(1));
             this.node.connect(this.ctx.destination);
         }
     }
@@ -326,9 +297,7 @@
                     continue;
                 }
 
-                const samples = view.getUint32(i, true); i += 4;
-                i += 4; // rate
-                i += 2; // padding
+                const samples = view.getUint32(i, true); i += 10; // skip rate + padding
                 const bits = view.getUint16(i, true); i += 2;
                 const wavData = view.getUint32(i, true); i += 4;
                 const wavLen = view.getUint32(i, true); i += 4;
