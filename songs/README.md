@@ -1,0 +1,1 @@
+Songs in this directory are for reference purposes only and are not covered under organya-js license and were created by Studio Pixel (Daisuke Amaya).

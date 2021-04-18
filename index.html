@@ -1,0 +1,144 @@
+<html>
+
+<head>
+    <title>Organya</title>
+</head>
+
+<body>
+    <select id="songs"></select>
+    <button onclick="playOrg()">Play</button>
+    <button onclick="stopOrg()">Stop</button>
+    <script src="organya.js"></script>
+    <script>
+        const songs = `Pixel/all/Get Heart Tank!.org
+Pixel/all/Halloween 2.org
+Pixel/all/On to Grasstown.org
+Pixel/all/Quiet.org
+Pixel/all/Jenka 1.org
+Pixel/all/XXXX.org
+Pixel/all/Torokos Theme.org
+Pixel/all/Wind Fortress.org
+Pixel/all/People of the Root.org
+Pixel/all/Victory!.org
+Pixel/all/Got Item!.org
+Pixel/all/Gestation.org
+Pixel/all/Balrog's Theme.org
+Pixel/all/Run!.org
+Pixel/all/Labyrinth Fight.org
+Pixel/all/White.org
+Pixel/all/Living Waterway.org
+Pixel/all/Charge.org
+Pixel/all/Gameover.org
+Pixel/all/Mimiga Town.org
+Pixel/all/Cemetery.org
+Pixel/all/Pier Walk.org
+Pixel/all/Scorching Back.org
+Pixel/all/Pulse.org
+Pixel/all/Moonsong.org
+Pixel/all/Geothermal.org
+Pixel/all/The Way Back Home.org
+Pixel/all/Seal Chamber.org
+Pixel/all/Mischievous Robot.org
+Pixel/all/Access.org
+Pixel/all/Eyes of Flame.org
+Pixel/all/Tyrant.org
+Pixel/all/Running Hell.org
+Pixel/all/Meltdown.org
+Pixel/all/Safety.org
+Pixel/all/Last Cave.org
+Pixel/all/Hero's End.org
+Pixel/all/Break Down.org
+Pixel/all/Cave Story.org
+Pixel/all/Plant.org
+Pixel/all/Snoopy Cake (Rockorg).org
+Pixel/all/Gravity.org
+Pixel/all/Zombie.org
+Pixel/all/Jenka 2.org
+Pixel/all/Balcony.org
+Pixel/all/Oppression.org
+Pixel/all/Last Battle.org
+Pixel/all/Meltdown 2.org
+Pixel/allbeta/Wind Fortress Beta 2002-07-05.org
+Pixel/allbeta/Pier Walk Beta 2001-09-30.org
+Pixel/allbeta/Oppression Beta 2001-12-09.org
+Pixel/allbeta/Wind Fortress Beta 2002-07-09.org
+Pixel/allbeta/Safety Beta 2002-07-01.org
+Pixel/allbeta/Living Waterway Beta 2002-01-20.org
+Pixel/allbeta/Plant Beta 2001-12-09.org
+Pixel/allbeta/Wind Fortress Beta 2002-10-24.org
+Pixel/allbeta/Safety Beta 2002-06-07.org
+Pixel/allbeta/Plant Beta 2002-12-17.org
+Pixel/allbeta/Gravity Beta 2002-07-20.org
+Pixel/allbeta/Cemetery Beta 2002-12-17.org
+Pixel/allbeta/Gestation Beta 2001-09-30.org
+Pixel/allbeta/Meltdown Beta 2001-09-30.org
+Pixel/allbeta/Gravity Beta 2002-01-20.org
+Pixel/allbeta/Quiet Beta 2004-02-19.org
+Pixel/allbeta/Eyes of Flame Beta 2002-10-24.org
+Pixel/allbeta/Pulse Beta 2003-02-10.org
+Pixel/allbeta/Safety Beta 2001-12-09.org
+Pixel/allbeta/White Beta 2002-01-20.org
+Pixel/allbeta/Safety Beta 2002-07-20.org
+Pixel/allbeta/Oppression Beta 2002-02-28.org
+Pixel/allbeta/Meltdown Beta 2001-12-09.org
+Pixel/allbeta/Safety Beta 2001-09-30.org
+Pixel/allbeta/Plant Beta 2001-09-30.org
+Pixel/allbeta/Eyes of Flame Beta 2004-12-15.org
+Pixel/allbeta/Hero's End Beta 2001-12-09.org
+Pixel/allbeta/Eyes of Flame Beta 2002-12-17.org
+Pixel/allbeta/Wind Fortress Beta 2002-07-20.org
+Pixel/allbeta/Mimiga Town Beta 2003-02-10.org
+Pixel/allbeta/Gravity Beta 2001-09-30.org
+Pixel/allbeta/Living Waterway Beta 2001-12-09.org
+Pixel/allbeta/Cave Story Beta 2004-12-07.org
+Pixel/allbeta/Eyes of Flame Beta 2004-12-14.org
+Pixel/allbeta/Cave Story Beta 2001-12-09.org
+Pixel/allbeta/Living Waterway Beta 2001-09-30.org
+Pixel/allbeta/Mischievous Robot Beta 2002-06-07.org
+Pixel/allbeta/Mischievous Robot Beta 2002-07-01.org
+Pixel/allbeta/White Beta 2002-02-14.org
+Pixel/allbeta/Moonsong Beta 2001-12-09.org
+Pixel/allbeta/Moonsong Beta 2002-01-20.org
+Pixel/allbeta/Cave Story Beta 2001-09-30.org
+Pixel/allbeta/White Beta 2002-02-28.org
+Pixel/allbeta/Hero's End Beta 2001-09-30.org
+Pixel/allbeta/Last Battle Beta.org
+Pixel/allbeta/Hero's End Beta 2002-01-20.org
+Pixel/maimai.org
+Pixel/wanpaku.org
+Pixel/snowfalling.org
+Pixel/happy00.org
+Pixel/town0.org`.split("\n");
+
+        const songListEl = document.getElementById("songs");
+        for (const song of songs) {
+            const opt = document.createElement("option");
+            opt.value = "songs/" + song;
+            opt.textContent = song;
+
+            songListEl.appendChild(opt);
+        }
+
+        let currentOrg = null;
+        function stopOrg() {
+            if (currentOrg != null) {
+                currentOrg.stop();
+                currentOrg = null;
+            }
+        }
+
+        async function playOrg() {
+            stopOrg();
+
+            console.log("fetching song...");
+            const res = await fetch(songListEl.options[songListEl.selectedIndex].value);
+            const data = await res.arrayBuffer();
+            await initOrganya();
+
+            currentOrg = new Organya(data);
+            currentOrg.play();
+        }
+    </script>
+</body>
+
+</html>
