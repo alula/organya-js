@@ -81,7 +81,6 @@
          */
         constructor(data) {
             this.song = new Song(data);
-            this.playing = false;
             this.node = null;
             this.onUpdate = null;
             this.t = 0;
@@ -120,8 +119,7 @@
                     if (this.state[i].playing) {
                         const samples = (i < 8) ? 256 : drums[i - 8].samples;
 
-                        const phase = (this.state[i].frequency / this.sampleRate) * advTable[this.state[i].octave];
-                        this.state[i].t += phase;
+                        this.state[i].t += (this.state[i].frequency / this.sampleRate) * advTable[this.state[i].octave];
 
                         if ((this.state[i].t | 0) >= samples) {
                             if (this.state[i].looping && this.state[i].num_loops != 1) {
@@ -251,8 +249,6 @@
         }
 
         play() {
-            this.playing = true;
-
             this.ctx = new AudioContext();
             this.sampleRate = this.ctx.sampleRate;
             this.samplesPerTick = (this.sampleRate / 1000) * this.song.wait | 0;
