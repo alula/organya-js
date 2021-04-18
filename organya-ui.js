@@ -122,7 +122,7 @@
 
             if (this.organya) {
                 const viewPos = startMeas * meas[0] * meas[1];
-                const scrollX = viewPos * 16;
+                const scrollX = viewPos * 16 - 64;
 
                 // draw tails
                 trackLoop: for (let track = 15; track > 0; track--) {
