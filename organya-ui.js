@@ -87,7 +87,7 @@
             const { width, height } = this.canvas;
             this.ctx.clearRect(0, 0, width, height);
 
-            const maxY = 9 * 144 - this.canvas.height;
+            const maxY = 8 * 144 - this.canvas.height;
             if (this.scrollY < 0) this.scrollY = 0;
             if (this.scrollY > maxY) this.scrollY = maxY;
 
@@ -125,9 +125,9 @@
                 const scrollX = viewPos * 16 - 64;
 
                 // draw tails
-                trackLoop: for (let track = 15; track > 0; track--) {
+                trackLoop: for (let track = 7; track > 0; track--) {
                     const trackRef = this.organya.song.tracks[track];
-                    let noteIdx = trackRef.findIndex((n) => n.pos >= viewPos);
+                    let noteIdx = Math.max(0, trackRef.findIndex((n) => n.pos >= viewPos) - 1);
                     if (noteIdx === -1) continue;
 
                     const sprTailX = 32;
@@ -139,7 +139,7 @@
                         if (!note) continue trackLoop;
 
                         const noteX = note.pos * 16 - scrollX;
-                        const noteY = (96 - note.key) * 12 - this.scrollY;
+                        const noteY = (95 - note.key) * 12 - this.scrollY;
 
                         x = noteX;
                         for (let i = 0; i < note.len; i++) {
@@ -151,7 +151,7 @@
 
                 trackLoop: for (let track = 15; track > 0; track--) {
                     const trackRef = this.organya.song.tracks[track];
-                    let noteIdx = trackRef.findIndex((n) => n.pos >= viewPos);
+                    let noteIdx = Math.max(0, trackRef.findIndex((n) => n.pos >= viewPos) - 1);
                     if (noteIdx === -1) continue;
 
                     const sprHeadX = (track & 1) * 16;
@@ -163,7 +163,7 @@
                         if (!note) continue trackLoop;
 
                         const noteX = note.pos * 16 - scrollX;
-                        const noteY = (96 - note.key) * 12 - this.scrollY;
+                        const noteY = (95 - note.key) * 12 - this.scrollY;
 
                         x = noteX;
                         for (let i = 0; i < note.len; i++) x += 16;
@@ -173,7 +173,7 @@
                 }
             }
 
-            let octave = 8;
+            let octave = 7;
             y = -this.scrollY;
             while (y < height) {
                 this.ctx.drawImage(this.pianoRoll, 0, 0, 64, 144, 0, y, 64, 144);
