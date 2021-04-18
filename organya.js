@@ -111,7 +111,6 @@
          * @param {Float32Array} rightBuffer
          */
         synth(leftBuffer, rightBuffer) {
-            //console.log("synth:", this.playPos, this.state.map(s => ({t: s.t, freq: s.frequency, play: s.playing, loop: s.looping})));
             for (let sample = 0; sample < leftBuffer.length; sample++) {
                 if (this.samplesThisTick == 0) this.update();
 
@@ -131,7 +130,7 @@
                                 this.state[i].t %= samples;
                                 if (this.state[i].num_loops != 1)
                                     this.state[i].num_loops -= 1;
-    
+
                             } else {
                                 this.state[i].t = 0;
                                 this.state[i].playing = false;
@@ -142,7 +141,7 @@
                         let pos = (this.state[i].t | 0) % samples;
                         let pos2 = !this.looping && (this.state[i].t | 0) == samples ?
                             pos
-                            : ((this.state[i].t + 1) | 0) % samples;
+                            : ((this.state[i].t + advTable[this.state[i].octave]) | 0) % samples;
                         const s1 = i < 8
                             ? (waveTable[256 * this.song.instruments[i].wave + pos] / 256)
                             : (((waveTable[drums[i - 8].filePos + pos] & 0xff) - 0x80) / 256);
@@ -184,7 +183,6 @@
         }
 
         update() {
-            //console.log("update:", this.playPos, this.state.map(s => ({t: s.t, freq: s.frequency})));
             for (let track = 0; track < 8; track++) {
                 const note = this.song.tracks[track].find((n) => n.pos == this.playPos);
                 if (note) {
@@ -242,9 +240,8 @@
 
                 if (this.state[track].length == 0) {
                     if (this.state[track].key != 255) {
-                        if (this.song.instruments[track].pipi == 0) {
+                        if (this.song.instruments[track].pipi == 0)
                             this.state[track].looping = false;
-                        }
 
                         this.state[track].playing = false;
                         this.state[track].key = 255;
@@ -264,13 +261,8 @@
                     this.state[track].playing = true;
                 }
 
-                if (note.vol != 255) {
-                    this.state[track].vol = note.vol;
-                }
-
-                if (note.pan != 255) {
-                    this.state[track].pan = note.pan;
-                }
+                if (note.vol != 255) this.state[track].vol = note.vol;
+                if (note.pan != 255) this.state[track].pan = note.pan;
             }
         }
 
@@ -285,6 +277,10 @@
             console.log(this.song);
 
             this.ctx = new AudioContext();
+            this.sampleRate = this.ctx.sampleRate;
+            this.samplesPerTick = (this.sampleRate / 1000) * this.song.wait | 0;
+            this.samplesThisTick = 0;
+
             this.node = this.ctx.createScriptProcessor(4096, 2, 2);
             this.node.onaudioprocess = (event) => {
                 const { outputBuffer } = event;
@@ -345,7 +341,6 @@
                 i += wavLen;
             }
         }
-        console.log(drums);
 
         window.Organya = Organya;
     };
