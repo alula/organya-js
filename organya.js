@@ -70,7 +70,7 @@
         }
     }
 
-    const freqTable = [262, 277, 294, 311, 330, 349, 370, 392, 415, 440, 466, 494];
+    const freqTable = [261, 278, 294, 311, 329, 349, 371, 391, 414, 440, 466, 494];
     const panTable = [0, 43, 86, 129, 172, 215, 256, 297, 340, 383, 426, 469, 512];
     const advTable = [1, 1, 2, 2, 4, 8, 16, 32];
     const octTable = [32, 64, 64, 128, 128, 128, 128, 128];
@@ -138,17 +138,18 @@
                             }
                         }
 
-                        let pos = (this.state[i].t | 0) % samples;
-                        let pos2 = !this.looping && (this.state[i].t | 0) == samples ?
+                        const t = this.state[i].t & ~(advTable[this.state[i].octave] - 1);
+                        let pos = t % samples;
+                        let pos2 = !this.looping && t == samples ?
                             pos
-                            : ((this.state[i].t + advTable[this.state[i].octave]) | 0) % samples;
+                            : ((this.state[i].t + advTable[this.state[i].octave]) & ~(advTable[this.state[i].octave] - 1)) % samples;
                         const s1 = i < 8
                             ? (waveTable[256 * this.song.instruments[i].wave + pos] / 256)
                             : (((waveTable[drums[i - 8].filePos + pos] & 0xff) - 0x80) / 256);
                         const s2 = i < 8
                             ? (waveTable[256 * this.song.instruments[i].wave + pos2] / 256)
                             : (((waveTable[drums[i - 8].filePos + pos2] & 0xff) - 0x80) / 256);
-                        const fract = this.state[i].t - Math.trunc(this.state[i].t | 0);
+                        const fract = (this.state[i].t - pos) / advTable[this.state[i].octave];
 
                         // perform linear interpolation
                         let s = s1 + (s2 - s1) * fract;
