@@ -22,7 +22,7 @@
             }
 
             this.wait = view.getUint16(p, true); p += 2;
-            p += 2; // skip
+            this.meas = [view.getUint8(p++, true), view.getUint8(p++, true)];
             this.start = view.getInt32(p, true); p += 4;
             this.end = view.getInt32(p, true); p += 4;
 
@@ -81,13 +81,12 @@
          */
         constructor(data) {
             this.song = new Song(data);
-            this.sampleRate = 44100;
             this.playing = false;
-            this.lock = false;
             this.node = null;
+            this.onUpdate = null;
             this.t = 0;
             this.playPos = 0;
-            this.samplesPerTick = (this.sampleRate / 1000) * this.song.wait | 0;
+            this.samplesPerTick = 0;
             this.samplesThisTick = 0;
             this.state = [];
             for (let i = 0; i < 16; i++) {
@@ -181,6 +180,8 @@
         }
 
         update() {
+            if (this.onUpdate) this.onUpdate(this);
+
             for (let track = 0; track < 8; track++) {
                 const note = this.song.tracks[track].find((n) => n.pos == this.playPos);
                 if (note) {

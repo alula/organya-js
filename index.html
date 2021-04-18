@@ -2,15 +2,61 @@
 
 <head>
     <title>Organya</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <style>
+        body {
+            background-color: #d4d0c8;
+        }
+
+        body,
+        html {
+            height: 100%;
+            margin: 0;
+            padding: 0
+        }
+
+        #toolbar {
+            position: absolute;
+            flex-wrap: nowrap;
+            height: 40px;
+            display: flex;
+            top: 0;
+            left: 0;
+            right: 0;
+        }
+
+        #toolbar select {
+            min-width: 0;
+            max-width: 256px;
+            flex: 0 1 auto;
+        }
+
+        #canvas-container {
+            position: absolute;
+            top: 40px;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+    </style>
 </head>
 
 <body>
-    <select id="songs"></select>
-    <button onclick="playOrg()">Play</button>
-    <button onclick="stopOrg()">Stop</button>
+    <div id="toolbar">
+        <select id="songs"></select>
+        <button onclick="playOrg()">Play</button>
+        <button onclick="stopOrg()">Stop</button>
+    </div>
+    <div id="canvas-container">
+        <canvas id="org-canvas"></canvas>
+    </div>
+
+    <!-- increment before each deploy -->
     <script src="organya.js?cache_bust=4"></script>
+    <script src="organya-ui.js?cache_bust=1"></script>
     <script>
-        const songs = `Pixel/all/Get Heart Tank!.org
+        (() => {
+            const songs = `Pixel/all/Get Heart Tank!.org
 Pixel/all/Halloween 2.org
 Pixel/all/On to Grasstown.org
 Pixel/all/Quiet.org
@@ -110,34 +156,49 @@ Pixel/snowfalling.org
 Pixel/happy00.org
 Pixel/town0.org`.split("\n").sort();
 
-        const songListEl = document.getElementById("songs");
-        for (const song of songs) {
-            const opt = document.createElement("option");
-            opt.value = "songs/" + song;
-            opt.textContent = song;
+            const songListEl = document.getElementById("songs");
+            for (let song of songs) {
+                song = song.trim();
+                const opt = document.createElement("option");
+                opt.value = "songs/" + song;
+                opt.textContent = song;
 
-            songListEl.appendChild(opt);
-        }
-
-        let currentOrg = null;
-        function stopOrg() {
-            if (currentOrg != null) {
-                currentOrg.stop();
-                currentOrg = null;
+                songListEl.appendChild(opt);
             }
-        }
 
-        async function playOrg() {
-            stopOrg();
+            const canvasContainer = document.getElementById("canvas-container");
+            const orgCanvas = document.getElementById("org-canvas");
+            orgCanvas.width = canvasContainer.clientWidth;
+            orgCanvas.height = canvasContainer.clientHeight;
+            const ui = new OrganyaUI(orgCanvas);
 
-            console.log("fetching song...");
-            const res = await fetch(songListEl.options[songListEl.selectedIndex].value);
-            const data = await res.arrayBuffer();
-            await initOrganya();
+            window.addEventListener("resize", () => {
+                orgCanvas.width = canvasContainer.clientWidth;
+                orgCanvas.height = canvasContainer.clientHeight;
+                ui.draw();
+            })
 
-            currentOrg = new Organya(data);
-            currentOrg.play();
-        }
+            let currentOrg = null;
+            window.stopOrg = () => {
+                if (currentOrg != null) {
+                    currentOrg.stop();
+                    currentOrg = null;
+                }
+            }
+
+            window.playOrg = async () => {
+                stopOrg();
+
+                console.log("fetching song...");
+                const res = await fetch(songListEl.options[songListEl.selectedIndex].value);
+                const data = await res.arrayBuffer();
+                await initOrganya();
+
+                currentOrg = new Organya(data);
+                ui.setOrganya(currentOrg);
+                currentOrg.play();
+            }
+        })();
     </script>
 </body>
 
