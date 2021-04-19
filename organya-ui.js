@@ -42,7 +42,7 @@
                 this.touchX = e.touches[0].pageX;
                 this.touchY = e.touches[0].pageY;
 
-                this.onScroll({deltaY: offY});
+                this.onScroll({ deltaY: offY });
             }
         }
 
@@ -139,8 +139,11 @@
                     if (noteIdx === -1) continue;
 
                     const sprTailX = 32;
-                    const sprTailY = 32 + tr
-                    console.log(organya.song);f[noteIdx++];
+                    const sprTailY = 32 + track * 4;
+
+                    let x = 64;
+                    while (x < width) {
+                        const note = trackRef[noteIdx++];
                         if (!note) continue trackLoop;
 
                         const noteX = note.pos * 16 - scrollX;
@@ -156,8 +159,24 @@
 
                 trackLoop: for (let track = 15; track > 0; track--) {
                     const trackRef = this.organya.song.tracks[track];
-                    let noteIdx = Math.max(0
-            console.log(organya.song);his.noteImg, sprHeadX, sprHeadY, 16, 8, noteX, noteY + 3, 16, 8);
+                    let noteIdx = Math.max(0, trackRef.findIndex((n) => n.pos >= viewPos) - 1);
+                    if (noteIdx === -1) continue;
+
+                    const sprHeadX = (track & 1) * 16;
+                    const sprHeadY = 48 + (track / 2 | 0) * 8;
+
+                    let x = 64;
+                    while (x < width) {
+                        const note = trackRef[noteIdx++];
+                        if (!note) continue trackLoop;
+
+                        const noteX = note.pos * 16 - scrollX;
+                        const noteY = (95 - note.key) * 12 - this.scrollY;
+
+                        x = noteX;
+                        for (let i = 0; i < note.len; i++) x += 16;
+
+                        this.ctx.drawImage(this.noteImg, sprHeadX, sprHeadY, 16, 8, noteX, noteY + 3, 16, 8);
                     }
                 }
             }
