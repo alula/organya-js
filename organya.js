@@ -249,12 +249,12 @@
         }
 
         play() {
-            this.ctx = new AudioContext();
+            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
             this.sampleRate = this.ctx.sampleRate;
             this.samplesPerTick = (this.sampleRate / 1000) * this.song.wait | 0;
             this.samplesThisTick = 0;
 
-            this.node = this.ctx.createScriptProcessor(4096, 2, 2);
+            this.node = this.ctx.createScriptProcessor(8192, 0, 2);
             this.node.onaudioprocess = (e) => this.synth(e.outputBuffer.getChannelData(0), e.outputBuffer.getChannelData(1));
             this.node.connect(this.ctx.destination);
         }

@@ -7,6 +7,7 @@
             this.canvas = canvas;
             this.ctx = canvas.getContext("2d");
             this.organya = null;
+            this.requested = false;
             this.scrollY = 8 * 144 - this.canvas.height;
 
             this.canvas.addEventListener("wheel", this.onScroll.bind(this));
@@ -35,6 +36,7 @@
 
         onTouchMove(e) {
             if (this.touching) {
+                e.preventDefault();
                 //const offX = this.touchX - e.touches[0].pageX;
                 const offY = this.touchY - e.touches[0].pageY;
                 this.touchX = e.touches[0].pageX;
@@ -52,12 +54,12 @@
 
         onScroll(e) {
             this.scrollY += e.deltaY;
-            this.draw();
+            this.onUpdate();
         }
 
         onImageLoad() {
-            if (this.noteImg.complete && this.pianoRoll.complete) {
-                this.draw();
+            if (this.noteImg.complete && this.pianoRoll.complete && this.number.complete) {
+                this.onUpdate();
             }
         }
 
@@ -67,7 +69,6 @@
          */
         setOrganya(organya) {
             this.organya = organya;
-            console.log(organya.song);
             this.organya.onUpdate = this.draw.bind(this);
         }
 
@@ -78,12 +79,19 @@
             }
 
             for (let i = 0; i < str.length; i++) {
-                this.ctx.drawImage(this.number, (str.charCodeAt(i) - 0x30) * 8, white ? 12 : 0, 8, 12, x, y, 8, 12);
-                x += 8;
+                this.ctx.drawImage(this.number, (str.charCodeAt(i) - 0x30) * 8, white ? 12 : 0, 8, 12, x + 8 * i, y, 8, 12);
             }
         }
 
+        onUpdate() {
+            if (this.requested) return;
+            this.requested = true;
+            window.requestAnimationFrame(this.draw.bind(this));
+        }
+
         draw() {
+            this.requested = false;
+
             const { width, height } = this.canvas;
             this.ctx.clearRect(0, 0, width, height);
 
@@ -131,11 +139,8 @@
                     if (noteIdx === -1) continue;
 
                     const sprTailX = 32;
-                    const sprTailY = 32 + track * 4;
-
-                    let x = 64;
-                    while (x < width) {
-                        const note = trackRef[noteIdx++];
+                    const sprTailY = 32 + tr
+                    console.log(organya.song);f[noteIdx++];
                         if (!note) continue trackLoop;
 
                         const noteX = note.pos * 16 - scrollX;
@@ -151,24 +156,8 @@
 
                 trackLoop: for (let track = 15; track > 0; track--) {
                     const trackRef = this.organya.song.tracks[track];
-                    let noteIdx = Math.max(0, trackRef.findIndex((n) => n.pos >= viewPos) - 1);
-                    if (noteIdx === -1) continue;
-
-                    const sprHeadX = (track & 1) * 16;
-                    const sprHeadY = 48 + (track / 2 | 0) * 8;
-                    
-                    let x = 64;
-                    while (x < width) {
-                        const note = trackRef[noteIdx++];
-                        if (!note) continue trackLoop;
-
-                        const noteX = note.pos * 16 - scrollX;
-                        const noteY = (95 - note.key) * 12 - this.scrollY;
-
-                        x = noteX;
-                        for (let i = 0; i < note.len; i++) x += 16;
-
-                        this.ctx.drawImage(this.noteImg, sprHeadX, sprHeadY, 16, 8, noteX, noteY + 3, 16, 8);
+                    let noteIdx = Math.max(0
+            console.log(organya.song);his.noteImg, sprHeadX, sprHeadY, 16, 8, noteX, noteY + 3, 16, 8);
                     }
                 }
             }

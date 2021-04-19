@@ -2,7 +2,7 @@
 
 <head>
     <title>Organya</title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
     <style>
         body {
             background-color: #d4d0c8;
@@ -195,7 +195,7 @@ Pixel/town0.org`.split("\n").sort();
                 await initOrganya();
 
                 currentOrg = new Organya(data);
-                ui.setOrganya(currentOrg);
+                //ui.setOrganya(currentOrg);
                 currentOrg.play();
             }
         })();
