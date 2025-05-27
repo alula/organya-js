@@ -96,6 +96,7 @@
                     octave: 0,
                     pan: 0.0,
                     vol: 1.0,
+                    vol_log: 1.0,
                     length: 0,
                     num_loops: 0,
                     playing: false,
@@ -116,43 +117,44 @@
                 rightBuffer[sample] = 0;
 
                 for (let i = 0; i < 16; i++) {
-                    if (this.state[i].playing) {
+                    const trackState = this.state[i];
+                    if (trackState.playing) {
                         const samples = (i < 8) ? 256 : drums[i - 8].samples;
 
-                        this.state[i].t += (this.state[i].frequency / this.sampleRate) * advTable[this.state[i].octave];
+                        trackState.t += (trackState.frequency / this.sampleRate) * advTable[trackState.octave];
 
-                        if ((this.state[i].t | 0) >= samples) {
-                            if (this.state[i].looping && this.state[i].num_loops != 1) {
-                                this.state[i].t %= samples;
-                                if (this.state[i].num_loops != 1)
-                                    this.state[i].num_loops -= 1;
+                        if ((trackState.t | 0) >= samples) {
+                            if (trackState.looping && trackState.num_loops != 1) {
+                                trackState.t %= samples;
+                                if (trackState.num_loops != 1)
+                                    trackState.num_loops -= 1;
 
                             } else {
-                                this.state[i].t = 0;
-                                this.state[i].playing = false;
+                                trackState.t = 0;
+                                trackState.playing = false;
                                 continue;
                             }
                         }
 
-                        const t = this.state[i].t & ~(advTable[this.state[i].octave] - 1);
+                        const t = trackState.t & ~(advTable[trackState.octave] - 1);
                         let pos = t % samples;
                         let pos2 = !this.looping && t == samples ?
                             pos
-                            : ((this.state[i].t + advTable[this.state[i].octave]) & ~(advTable[this.state[i].octave] - 1)) % samples;
+                            : ((trackState.t + advTable[trackState.octave]) & ~(advTable[trackState.octave] - 1)) % samples;
                         const s1 = i < 8
                             ? (waveTable[256 * this.song.instruments[i].wave + pos] / 256)
                             : (((waveTable[drums[i - 8].filePos + pos] & 0xff) - 0x80) / 256);
                         const s2 = i < 8
                             ? (waveTable[256 * this.song.instruments[i].wave + pos2] / 256)
                             : (((waveTable[drums[i - 8].filePos + pos2] & 0xff) - 0x80) / 256);
-                        const fract = (this.state[i].t - pos) / advTable[this.state[i].octave];
+                        const fract = (trackState.t - pos) / advTable[trackState.octave];
 
                         // perform linear interpolation
                         let s = s1 + (s2 - s1) * fract;
 
-                        s *= Math.pow(10, ((this.state[i].vol - 255) * 8) / 2000);
+                        s *= trackState.vol_log;
 
-                        const pan = (panTable[this.state[i].pan] - 256) * 10;
+                        const pan = (panTable[trackState.pan] - 256) * 10;
                         let left = 1, right = 1;
 
                         if (pan < 0) {
@@ -181,65 +183,70 @@
             if (this.onUpdate) this.onUpdate(this);
 
             for (let track = 0; track < 8; track++) {
-                const note = this.song.tracks[track].find((n) => n.pos == this.playPos);
+                const note = this.song.tracks[track].find((n) => n.pos == this.playPos); // TODO: this feels inefficient
+                const trackState = this.state[track];
                 if (note) {
                     if (note.key != 255) {
                         const octave = ((note.key / 12) | 0);
                         const key = note.key % 12;
 
-                        if (this.state[track].key == 255) {
-                            this.state[track].key = note.key;
+                        if (trackState.key == 255) {
+                            trackState.key = note.key;
 
-                            this.state[track].frequency = freqTable[key] * octTable[octave] + (this.song.instruments[track].freq - 1000);
-                            if (this.song.instruments[track].pipi != 0 && !this.state[track].playing) {
-                                this.state[track].num_loops = ((octave + 1) * 4);
+                            trackState.frequency = freqTable[key] * octTable[octave] + (this.song.instruments[track].freq - 1000);
+                            if (this.song.instruments[track].pipi != 0 && !trackState.playing) {
+                                trackState.num_loops = ((octave + 1) * 4);
                             }
-                        } else if (this.state[track].key != note.key) {
-                            this.state[track].key = note.key;
-                            this.state[track].frequency = freqTable[key] * octTable[octave] + (this.song.instruments[track].freq - 1000);
+                        } else if (trackState.key != note.key) {
+                            trackState.key = note.key;
+                            trackState.frequency = freqTable[key] * octTable[octave] + (this.song.instruments[track].freq - 1000);
                         }
 
-                        if (this.song.instruments[track].pipi != 0 && !this.state[track].playing) {
-                            this.state[track].num_loops = ((octave + 1) * 4);
+                        if (this.song.instruments[track].pipi != 0 && !trackState.playing) {
+                            trackState.num_loops = ((octave + 1) * 4);
                         }
 
-                        this.state[track].octave = octave;
-                        this.state[track].playing = true;
-                        this.state[track].looping = true;
-                        this.state[track].length = note.len;
+                        trackState.octave = octave;
+                        trackState.playing = true;
+                        trackState.looping = true;
+                        trackState.length = note.len;
                     }
 
-                    if (this.state[track].key != 255) {
-                        if (note.vol != 255) this.state[track].vol = note.vol;
-                        if (note.pan != 255) this.state[track].pan = note.pan;
+                    if (trackState.key != 255) {
+                        if (note.vol != 255) {
+                            trackState.vol = note.vol;
+                            trackState.vol_log = Math.pow(10, ((note.vol - 255) * 8) / 2000);
+                        }
+                        if (note.pan != 255) trackState.pan = note.pan;
                     }
                 }
 
-                if (this.state[track].length == 0) {
-                    if (this.state[track].key != 255) {
+                if (trackState.length == 0) {
+                    if (trackState.key != 255) {
                         if (this.song.instruments[track].pipi == 0)
-                            this.state[track].looping = false;
+                            trackState.looping = false;
 
-                        this.state[track].playing = false;
-                        this.state[track].key = 255;
+                        trackState.playing = false;
+                        trackState.key = 255;
                     }
                 } else {
-                    this.state[track].length--;
+                    trackState.length--;
                 }
             }
 
             for (let track = 8; track < 16; track++) {
                 const note = this.song.tracks[track].find((n) => n.pos == this.playPos);
+                const trackState = this.state[track];
                 if (!note) continue;
 
                 if (note.key != 255) {
-                    this.state[track].frequency = note.key * 800 + 100;
-                    this.state[track].t = 0;
-                    this.state[track].playing = true;
+                    trackState.frequency = note.key * 800 + 100;
+                    trackState.t = 0;
+                    trackState.playing = true;
                 }
 
-                if (note.vol != 255) this.state[track].vol = note.vol;
-                if (note.pan != 255) this.state[track].pan = note.pan;
+                if (note.vol != 255) trackState.vol = note.vol;
+                if (note.pan != 255) trackState.pan = note.pan;
             }
         }
 
