@@ -245,7 +245,10 @@
                     trackState.playing = true;
                 }
 
-                if (note.vol != 255) trackState.vol = note.vol;
+                if (note.vol != 255) {
+                    trackState.vol = note.vol;
+                    trackState.vol_log = Math.pow(10, ((note.vol - 255) * 8) / 2000);
+                }
                 if (note.pan != 255) trackState.pan = note.pan;
             }
         }
